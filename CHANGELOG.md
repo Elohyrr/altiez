@@ -8,9 +8,11 @@ All notable changes to this project will be documented in this file.
 
 - Refactor src files & simplify ci
 - Reformat with black and fix ci
+- Lint
 
 ### Documentation
 
+- Update changelog [skip ci]
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 
