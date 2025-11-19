@@ -170,11 +170,11 @@ def run_bot_interactive(headless: bool = False, unit_url: str = None):
                     # Vérifier qu'on est bien dans un exercice
                     try:
                         page.wait_for_selector("input.c-iJOJc", timeout=3000, state="visible")
-                    except:
+                    except Exception:
                         print_error("Pas d'exercice détecté sur cette page")
                         break
 
-            except:
+            except Exception:
                 print_error("Aucun exercice détecté sur cette page")
                 print_info(
                     "Assurez-vous d'être sur la page d'un exercice (là où vous voyez les questions)"

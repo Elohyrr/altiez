@@ -6,8 +6,6 @@ import time
 from playwright.sync_api import Page, TimeoutError as PlaywrightTimeout
 from .utils import (
     wait_and_click,
-    get_text,
-    fill_input,
     print_success,
     print_error,
     print_info,
