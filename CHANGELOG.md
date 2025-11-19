@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Bug Fixes
+
+- Refactor src files & simplify ci
+
+### Documentation
+
+- Update changelog [skip ci]
+
 ### Miscellaneous Tasks
 
 - Init project
