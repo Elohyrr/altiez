@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.1.0 (2025-11-19)
+
+
+### Documentation
+
+* update changelog [skip ci] ([41559e3](https://github.com/Elohyrr/altiez/commit/41559e3f98b229056b61b90ba595bd028b3d88b5))
+
 ## [Unreleased]
 
 ### Miscellaneous Tasks
