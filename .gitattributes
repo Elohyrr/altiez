@@ -46,3 +46,4 @@ LICENSE text eol=lf
 # Git attributes for linguist
 *.py linguist-language=Python
 *.md linguist-documentation
+altissia_bot/** linguist-vendored=false

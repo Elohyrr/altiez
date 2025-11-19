@@ -6,8 +6,8 @@ Script principal pour lancer et gérer les exercices
 import sys
 import time
 from playwright.sync_api import sync_playwright
-from utils import load_config, print_header, print_success, print_error, print_info
-from automations import (
+from .utils import load_config, print_header, print_success, print_error, print_info
+from .automations import (
     login, get_available_exercises, select_exercise,
     solve_exercise, navigate_to_unit
 )

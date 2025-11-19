@@ -69,19 +69,25 @@ ALTISSIA_URL=https://www.altissia.com/
 **Interactive mode** (recommended for first use):
 
 ```bash
-python main.py
+python run.py
+# or
+python -m altissia_bot
 ```
 
 **Headless mode** (invisible browser):
 
 ```bash
-python main.py --headless
+python run.py --headless
+# or
+python -m altissia_bot --headless
 ```
 
 **Automatic mode**:
 
 ```bash
-python main.py --auto --exercise 1
+python run.py --auto --exercise 1
+# or
+python -m altissia_bot --auto --exercise 1
 ```
 
 ---
@@ -131,13 +137,17 @@ altissia-bot/
 │       ├── lint.yml        # Python linting
 │       ├── commitlint.yml  # Commit message validation
 │       └── release.yml     # Automated changelog
-├── main.py                 # Entry point
-├── automations.py          # Core automation logic
-├── utils.py               # Helper functions
+├── altissia_bot/          # Main package
+│   ├── __init__.py        # Package initialization
+│   ├── __main__.py        # Module entry point
+│   ├── main.py            # Main script logic
+│   ├── automations.py     # Core automation logic
+│   └── utils.py           # Helper functions
+├── run.py                 # Convenience launcher
 ├── requirements.txt       # Python dependencies
 ├── .env.example          # Environment template
 ├── .gitignore            # Git ignore rules
-├── LICENSE               # MIT License
+├── LICENSE               # Apache 2.0 License
 ├── README.md             # This file
 ├── CONTRIBUTING.md       # Contribution guidelines
 └── CONTRIBUTORS.md       # Project contributors
@@ -158,7 +168,7 @@ cd altissia-bot
 pip install -r requirements.txt
 playwright install chromium
 
-# Install development tools (optional)
+# Install development tools
 pip install black flake8 mypy
 ```
 
@@ -168,16 +178,16 @@ We use [Black](https://github.com/psf/black) for code formatting:
 
 ```bash
 # Format code
-black *.py
+black altissia_bot/ run.py
 
 # Check formatting
-black --check *.py
+black --check altissia_bot/ run.py
 ```
 
 Linting with flake8:
 
 ```bash
-flake8 *.py --max-line-length=100
+flake8 altissia_bot/ run.py --max-line-length=100
 ```
 
 ### HTML Selectors Reference
@@ -205,7 +215,7 @@ To find new selectors:
 
 ```bash
 # Run in non-headless mode to see what's happening
-python main.py
+python run.py
 ```
 
 **Debug mode:**

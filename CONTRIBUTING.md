@@ -133,11 +133,11 @@ def my_function(param: str) -> bool:
 
 ```bash
 # Run manually to verify
-python main.py
+python run.py
 
 # Check code style
-black *.py
-flake8 *.py --max-line-length=100
+black altissia_bot/ run.py
+flake8 altissia_bot/ run.py --max-line-length=100
 ```
 
 ### 5. Commit
@@ -292,7 +292,7 @@ target-version = ['py37']
 
 **Format code:**
 ```bash
-black *.py
+black altissia_bot/ run.py
 ```
 
 ### Linting Rules
@@ -309,7 +309,7 @@ ignore = E203, W503
 
 **Lint code:**
 ```bash
-flake8 *.py
+flake8 altissia_bot/ run.py
 ```
 
 ### Code Principles

@@ -1,4 +1,4 @@
-name: Release
+name: Update Changelog
 
 on:
   push:
@@ -7,29 +7,8 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  release-please:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: google-github-actions/release-please-action@v4
-        id: release
-        with:
-          release-type: python
-          package-name: altissia-bot
-          
-      # Optional: Publish to PyPI if this becomes a package
-      # - name: Publish to PyPI
-      #   if: ${{ steps.release.outputs.release_created }}
-      #   run: |
-      #     pip install build twine
-      #     python -m build
-      #     twine upload dist/*
-      #   env:
-      #     TWINE_USERNAME: __token__
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-
   changelog:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
