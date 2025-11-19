@@ -372,3 +372,7 @@ Feel free to:
 - Reach out to maintainers
 
 Thank you for contributing! 🚀
+
+---
+
+**📍 Location**: This file is located at `docs/CONTRIBUTING.md`

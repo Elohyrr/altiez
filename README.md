@@ -35,7 +35,7 @@ Automation bot for Altissia language exercises using Python and Playwright.
 **Option 1: Automated script**
 
 ```bash
-./install.sh
+./scripts/install.sh
 ```
 
 **Option 2: Manual installation**
@@ -143,14 +143,18 @@ altissia-bot/
 │   ├── main.py            # Main script logic
 │   ├── automations.py     # Core automation logic
 │   └── utils.py           # Helper functions
+├── docs/                  # Documentation
+│   ├── CHANGELOG.md       # Version history
+│   ├── CONTRIBUTING.md    # Contribution guidelines
+│   └── CONTRIBUTORS.md    # Project contributors
+├── scripts/               # Utility scripts
+│   └── install.sh         # Automated installation
 ├── run.py                 # Convenience launcher
 ├── requirements.txt       # Python dependencies
 ├── .env.example          # Environment template
 ├── .gitignore            # Git ignore rules
 ├── LICENSE               # Apache 2.0 License
-├── README.md             # This file
-├── CONTRIBUTING.md       # Contribution guidelines
-└── CONTRIBUTORS.md       # Project contributors
+└── README.md             # This file
 ```
 
 ---
@@ -231,7 +235,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for:
+Contributions are welcome! Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
 
 - Code of conduct
 - Development workflow
@@ -253,7 +257,7 @@ refactor: simplify answer collection logic
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes.
+See [CHANGELOG.md](docs/CHANGELOG.md) for a detailed history of changes.
 
 ---
 
@@ -293,7 +297,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ## 👥 Contributors
 
-See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the list of contributors.
+See [CONTRIBUTORS.md](docs/CONTRIBUTORS.md) for the list of contributors.
 
 ---
 
