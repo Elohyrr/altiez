@@ -7,9 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Refactor src files & simplify ci
+- Reformat with black and fix ci
 
 ### Documentation
 
+- Update changelog [skip ci]
 - Update changelog [skip ci]
 
 ### Miscellaneous Tasks
