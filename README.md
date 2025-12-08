@@ -198,6 +198,11 @@ Linting with flake8:
 flake8 altissia_bot/ run.py --max-line-length=100
 ```
 
+Linting with mypy:
+
+```bash
+mypy altissia_bot/ run.py --ignore-missing-imports
+```
 ### HTML Selectors Reference
 
 If Altissia updates their HTML structure, update these selectors in `automations.py`:

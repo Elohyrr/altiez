@@ -1,383 +1,730 @@
 """
-Module d'automatisation pour les exercices Altissia
+Module d automatisation - VERSION BLACKLIST FIXED
+Vérifie les MOTS ENTIERS dans la blacklist (pas sous-chaînes)
 """
 
 import time
-from typing import Optional
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeout
-from .utils import (
-    wait_and_click,
-    print_success,
-    print_error,
-    print_info,
-)
+import re
+from playwright.sync_api import TimeoutError as PlaywrightTimeout
+from .utils import wait_and_click, print_success, print_error, print_info
 
-
-# Sélecteurs HTML Altissia
 SELECTORS = {
-    "input_field": "input.c-iJOJc",
+    "input_field": 'input.c-iJOJc, input[type="text"]',
     "validate_button": 'button:has-text("Valider")',
     "correct_answer": "span.c-gUxMKR-bkfbUO-isCorrect-true",
     "continue_button": 'button.c-jUtMbh, button.c-lfgsZH:has-text("Continuer")',
+    "retry_button": 'button:has-text("Réessayer"), button:has-text("Ressayer")',
 }
 
+# Mots à ignorer - attention: vérifiés en MOTS ENTIERS maintenant
+BLACKLIST_WORDS = [
+    "Incorrect",
+    "Correct",
+    "Wrong",
+    "Faux",
+    "Vrai",
+    "Error",
+    "Success",
+    "Valider",
+    "Continuer",
+    "Revenir",
+    "Ressayer",
+    "Réessayer",
+    "Pause",
+    "Play",
+    "Mute",
+    "Skip",
+    "Select the right answer",
+    "Choose",
+    "Click",
+    "Put the elements in the right order",
+    "Sélectionnez le premier élément",
+    "Listen to",
+    "Max is writing",
+    "Accueil",
+    "Toutes les leçons",
+    "Actualités",
+]
 
-def login(page: Page, username: str, password: str) -> bool:
-    """
-    Connexion à la plateforme Altissia
 
-    Args:
-        page: Page Playwright
-        username: Nom d'utilisateur
-        password: Mot de passe
+def normalize_quotes(text):
+    if not text:
+        return text
+    text = text.replace(chr(8220), chr(34))
+    text = text.replace(chr(8221), chr(34))
+    text = text.replace(chr(171), chr(34))
+    text = text.replace(chr(187), chr(34))
+    text = text.replace(chr(8216), chr(39))
+    text = text.replace(chr(8217), chr(39))
+    return text
 
-    Returns:
-        bool: True si connexion réussie, False sinon
-    """
+
+def clean_text(text):
+    if not text:
+        return text
+    text = text.strip()
+    text = normalize_quotes(text)
+    text = text.strip(chr(34)).strip(chr(39))
+    text = text.rstrip(".").rstrip("!").rstrip("?").rstrip(",").rstrip(";").rstrip(":")
+    return text.strip()
+
+
+def texts_match(text1, text2):
+    if not text1 or not text2:
+        return False
+    normalized1 = normalize_quotes(text1.strip())
+    normalized2 = normalize_quotes(text2.strip())
+    if normalized1 == normalized2:
+        return True
+    if clean_text(text1) == clean_text(text2):
+        return True
+    return False
+
+
+def get_text_variants(text):
+    variants = []
+    variants.append(text)
+    normalized = normalize_quotes(text)
+    if normalized != text:
+        variants.append(normalized)
+    cleaned = clean_text(text)
+    if cleaned != text:
+        variants.append(cleaned)
+    text_no_punct = text.rstrip(".").rstrip("!").rstrip("?").rstrip(",")
+    if text_no_punct != text:
+        variants.append(text_no_punct)
+    if chr(34) not in text and cleaned:
+        variants.append(f"{chr(34)}{cleaned}{chr(34)}")
+    no_quotes = text.replace(chr(34), "").replace(chr(39), "")
+    if no_quotes:
+        variants.append(no_quotes)
+        cleaned_no_quotes = clean_text(no_quotes)
+        if cleaned_no_quotes:
+            variants.append(cleaned_no_quotes)
+    return [v for v in dict.fromkeys(variants) if v]
+
+
+def is_blacklisted(text):
+    """Vérifie si le texte contient un mot blacklisté (MOT ENTIER uniquement)"""
+    if not text:
+        return False
+
+    text_lower = text.lower()
+
+    for word in BLACKLIST_WORDS:
+        word_lower = word.lower()
+
+        # Si blacklist word contient des espaces, chercher la phrase exacte
+        if " " in word_lower:
+            if word_lower in text_lower:
+                return True
+        else:
+            # Vérifier MOT ENTIER avec word boundaries
+            # Utiliser regex pour éviter "right" dans "trustworthy"
+            pattern = r"\b" + re.escape(word_lower) + r"\b"
+            if re.search(pattern, text_lower):
+                return True
+
+    return False
+
+
+def login(page, username, password):
     try:
-        print_info("Connexion à Altissia...")
-
-        # Attendre que la page soit complètement chargée
+        print_info("Connexion...")
         page.wait_for_load_state("networkidle")
         time.sleep(1)
-
-        # Remplir le champ email/username de façon plus naturelle
         email_field = page.locator(
-            'input[type="email"], input[name="email"], input[name="username"]'
+            'input[type="email"], input[name="email"], input[placeholder*="mail"]'
         ).first
+        email_field.wait_for(state="visible", timeout=5000)
         email_field.click()
         time.sleep(0.3)
         email_field.fill(username)
         time.sleep(0.5)
-
-        # Remplir le champ password de façon plus naturelle
-        password_field = page.locator('input[type="password"], input[name="password"]').first
+        password_field = page.locator('input[type="password"]').first
+        password_field.wait_for(state="visible", timeout=5000)
         password_field.click()
         time.sleep(0.3)
         password_field.fill(password)
         time.sleep(0.5)
-
-        # Cliquer sur le bouton de connexion
-        page.click(
-            'button[type="submit"], button:has-text("Connexion"), button:has-text("Login"), button:has-text("Se connecter")'
-        )
-
-        # Attendre que la connexion se fasse
-        print_info("Tentative de connexion...")
+        connect_button_selectors = [
+            'button:has-text("Se connecter")',
+            'button:has-text("Connexion")',
+            'button:has-text("Login")',
+            'button[type="submit"]',
+        ]
+        clicked = False
+        for selector in connect_button_selectors:
+            try:
+                button = page.locator(selector).first
+                button.wait_for(state="visible", timeout=2000)
+                button.click()
+                clicked = True
+                print_info(f"Connexion via: {selector}")
+                break
+            except PlaywrightTimeout:
+                continue
+        if not clicked:
+            print_error("Bouton de connexion non trouvé")
+            return False
         time.sleep(3)
-
         print_success("Connexion réussie")
         return True
     except Exception as e:
-        print_error(f"Échec de la connexion : {e}")
+        print_error(f"Échec connexion: {e}")
         return False
 
 
-def get_available_exercises(page: Page) -> list:
-    """
-    Récupère la liste des exercices disponibles dans l'unité
+def detect_exercise_type(page):
+    print_info("Mode: Détection par question")
+    return "mixed"
 
-    Args:
-        page: Page Playwright
 
-    Returns:
-        list: Liste des exercices (titre, sélecteur)
-    """
-    # Cette fonction devra être adaptée selon la structure HTML réelle
-    # d'Altissia pour lister les exercices
-    print_info("Récupération des exercices disponibles...")
-
-    exercises = []
+def detect_question_type(page):
     try:
-        # Exemple : chercher tous les liens/boutons d'exercices
-        # À adapter selon la vraie structure
-        exercise_elements = page.locator(
-            '[data-exercise], .exercise-item, a[href*="exercise"]'
-        ).all()
-
-        for idx, element in enumerate(exercise_elements, 1):
-            title = element.inner_text() or f"Exercice {idx}"
-            exercises.append({"id": idx, "title": title.strip(), "element": element})
-
-        if not exercises:
-            print_info("Aucun exercice trouvé (structure HTML à vérifier)")
-    except Exception as e:
-        print_error(f"Erreur lors de la récupération des exercices : {e}")
-
-    return exercises
-
-
-def select_exercise(page: Page, exercise_id: int, exercises: list) -> bool:
-    """
-    Sélectionne et lance un exercice
-
-    Args:
-        page: Page Playwright
-        exercise_id: ID de l'exercice à lancer
-        exercises: Liste des exercices disponibles
-
-    Returns:
-        bool: True si l'exercice a été lancé, False sinon
-    """
-    try:
-        if not exercises or exercise_id > len(exercises):
-            print_error(f"Exercice {exercise_id} introuvable")
-            return False
-
-        exercise = exercises[exercise_id - 1]
-        print_info(f"Lancement de l'exercice : {exercise['title']}")
-
-        exercise["element"].click()
-        time.sleep(1)
-
-        print_success("Exercice ouvert")
-        return True
-    except Exception as e:
-        print_error(f"Erreur lors de l'ouverture de l'exercice : {e}")
-        return False
-
-
-def collect_answer(page: Page, question_number: int):
-    """
-    Collecte la réponse d'une question sans la remplir
-    Gère les questions à réponse simple ou multiple (plusieurs trous)
-
-    Logique :
-    1. Clique sur Valider sans répondre → révèle la réponse
-    2. Récupère TOUTES les bonnes réponses (peut y en avoir plusieurs)
-    3. Clique Continuer (pour passer à la suivante)
-
-    Args:
-        page: Page Playwright
-        question_number: Numéro de la question
-
-    Returns:
-        list: Liste des réponses correctes ou None si échec
-    """
-    try:
-        print_info(f"Collecte de la réponse {question_number}...")
-
-        # Étape 1 : Cliquer sur Valider sans répondre pour révéler la réponse
-        if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
-            print_error("Bouton Valider introuvable")
-            return None
-
         time.sleep(0.5)
+        input_count = page.locator(f'{SELECTORS["input_field"]}:visible').count()
+        if input_count > 0:
+            return "text"
+        true_btn = page.locator(
+            'button:has-text("true"):visible, button:has-text("True"):visible'
+        ).count()
+        false_btn = page.locator(
+            'button:has-text("false"):visible, button:has-text("False"):visible'
+        ).count()
+        if true_btn > 0 and false_btn > 0:
+            return "truefalse"
+        order_indicators = [
+            "text=Put the elements in the right order",
+            "text=Mettez les éléments dans le bon ordre",
+            "text=Sélectionnez le premier élément",
+        ]
+        for indicator in order_indicators:
+            try:
+                count = page.locator(indicator).count()
+                if count > 0:
+                    return "order"
+            except Exception:
+                pass
+        all_clickable = page.locator(
+            'button:visible, [role="button"]:visible, div[class*="button"]:visible'
+        ).all()
+        choice_count = sum(1 for elem in all_clickable if is_valid_choice_element(elem))
+        if choice_count >= 2:
+            return "choice"
+        return "unknown"
+    except Exception as e:
+        print_error(f"Erreur détection: {e}")
+        return "unknown"
 
-        # Étape 2 : Récupérer TOUTES les bonnes réponses (peut y en avoir plusieurs)
+
+def is_valid_choice_element(elem):
+    try:
+        text = elem.inner_text().strip()
+        if not text or is_blacklisted(text):
+            return False
+        if len(text) > 200:
+            return False
+        return True
+    except Exception:
+        return False
+
+
+def collect_all_answers(page, exercise_type, max_questions=100):
+    print_info("PHASE 1: Collecte des réponses")
+    answers_db = []
+    for q_num in range(1, max_questions + 1):
         try:
-            page.wait_for_selector(SELECTORS["correct_answer"], timeout=3000, state="visible")
-            correct_answers_elements = page.locator(SELECTORS["correct_answer"]).all()
+            try:
+                retry_visible = page.locator(
+                    'button:has-text("Réessayer"), button:has-text("Ressayer")'
+                ).count()
+                continuer_visible = page.locator('button:has-text("Continuer")').count()
+                if retry_visible > 0 and continuer_visible == 0:
+                    print_info("Bouton Réessayer détecté - Fin")
+                    break
+            except Exception:
+                pass
+            question_type = detect_question_type(page)
+            if question_type == "unknown":
+                print_info("Plus de questions")
+                break
+            print_info(f"--- Question {q_num} ({question_type.upper()}) ---")
+            if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
+                print_info("Plus de bouton Valider")
+                break
+
+            time.sleep(2.5)
 
             correct_answers = []
-            for element in correct_answers_elements:
-                text = element.inner_text().strip()
-                if text:
-                    correct_answers.append(text)
-
+            if question_type == "text":
+                correct_answers = find_text_answers(page)
+            elif question_type == "choice":
+                correct_answers = find_choice_answers(page)
+            elif question_type == "truefalse":
+                correct_answers = detect_truefalse_answer(page)
+            elif question_type == "order":
+                correct_answers = find_order_answer(page)
+            correct_answers = filter_blacklist(correct_answers)
             if not correct_answers:
-                print_error("Aucune réponse correcte trouvée")
-                return None
-
-            # Affichage
-            if len(correct_answers) == 1:
-                print_success(f"Réponse {question_number} : '{correct_answers[0]}'")
-            else:
-                print_success(
-                    f"Réponse {question_number} : {correct_answers} ({len(correct_answers)} trous)"
-                )
-
-        except Exception as e:
-            print_error(f"Erreur lors de la récupération des réponses : {e}")
-            return None
-
-        # Étape 3 : Cliquer sur Continuer (ne pas remplir le champ)
-        if not wait_and_click(page, SELECTORS["continue_button"], timeout=3000):
-            print_info("Bouton Continuer introuvable (dernière question ?)")
-            return correct_answers  # Dernière question
-
-        time.sleep(0.5)
-
-        return correct_answers
-
-    except Exception as e:
-        print_error(f"Erreur lors de la collecte : {e}")
-        return None
-
-
-def fill_answer(page: Page, answers, question_number: int) -> bool:
-    """
-    Remplit une question avec la/les réponse(s) stockée(s)
-    Gère les questions à réponse simple ou multiple (plusieurs trous)
-
-    Args:
-        page: Page Playwright
-        answers: La réponse (str) ou les réponses (list) à remplir
-        question_number: Numéro de la question
-
-    Returns:
-        bool: True si succès, False sinon
-    """
-    try:
-        # Convertir en liste si c'est une seule réponse
-        if isinstance(answers, str):
-            answers = [answers]
-
-        print_info(f"Remplissage question {question_number}...")
-
-        # Attendre que les champs soient visibles
-        page.wait_for_selector(SELECTORS["input_field"], timeout=3000, state="visible")
-
-        # Récupérer tous les champs input
-        input_fields = page.locator(SELECTORS["input_field"]).all()
-
-        # Vérifier qu'on a le bon nombre de réponses
-        if len(input_fields) != len(answers):
-            print_error(
-                f"Nombre de champs ({len(input_fields)}) ≠ nombre de réponses ({len(answers)})"
+                print_error(f"Aucune réponse pour Q{q_num}")
+                correct_answers = find_any_correct_elements(page)
+                correct_answers = filter_blacklist(correct_answers)
+                if not correct_answers:
+                    manual = input("Entrez manuellement (ou skip): ").strip()
+                    if manual.lower() == "skip":
+                        break
+                    elif manual:
+                        correct_answers = [manual]
+                    else:
+                        break
+            answers_db.append(
+                {"question_num": q_num, "type": question_type, "answers": correct_answers}
             )
-            return False
+            print_success(f"Réponse: {correct_answers}")
+            if not wait_and_click(page, SELECTORS["continue_button"], timeout=3000):
+                print_info("Dernière question")
+                break
+            time.sleep(0.5)
+        except Exception as e:
+            print_error(f"Erreur Q{q_num}: {e}")
+            break
+    print_success(f"{len(answers_db)} questions collectées!")
+    return answers_db
 
-        # Remplir chaque champ avec sa réponse correspondante
-        for i, (field, answer) in enumerate(zip(input_fields, answers)):
-            field.click()
-            time.sleep(0.2)
-            field.fill(answer)
-            time.sleep(0.2)
 
-        time.sleep(0.3)
+def filter_blacklist(answers):
+    """Filtre avec vérification MOT ENTIER"""
+    if not answers:
+        return []
+    filtered = []
+    for answer in answers:
+        if not is_blacklisted(answer):
+            filtered.append(answer)
+        else:
+            print_info(f"  Ignoré (blacklist): {answer}")
+    return filtered
 
-        # Valider
-        if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
-            print_error("Impossible de valider")
-            return False
 
-        time.sleep(0.5)
+def find_text_answers(page):
+    results = []
+    try:
+        correct_elements = page.locator(SELECTORS["correct_answer"]).all()
+        for elem in correct_elements:
+            text = elem.inner_text().strip()
+            if text:
+                results.append(text)
+                print_info(f"  Texte correct: {text}")
+    except Exception:
+        pass
+    if not results:
+        results = find_green_text_elements(page)
+    return results
 
-        # Continuer
-        if not wait_and_click(page, SELECTORS["continue_button"], timeout=3000):
-            print_info("Bouton Continuer introuvable (dernière question ?)")
-            return True
 
-        print_success(f"Question {question_number} remplie ✓")
-        time.sleep(0.5)
+def find_green_text_elements(page):
+    results = []
+    try:
+        spans = page.locator("span:visible, div:visible").all()[:30]
+        for span in spans:
+            try:
+                text = span.inner_text().strip()
+                if not text or len(text) > 200:
+                    continue
+                color = span.evaluate("el => window.getComputedStyle(el).color")
+                classes = span.get_attribute("class") or ""
+                is_green = (
+                    "rgb(34, 197, 94)" in str(color)
+                    or "rgb(22, 163, 74)" in str(color)
+                    or "rgb(0, 128, 0)" in str(color)
+                    or "rgb(26, 179, 92)" in str(color)
+                    or "correct" in classes.lower()
+                )
+                if is_green:
+                    results.append(text)
+                    print_info(f"  Texte vert: {text}")
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return results
 
-        return True
 
+def find_choice_answers(page):
+    results = []
+    try:
+        print_info("  Recherche choix verts...")
+        all_elements = page.locator("*:visible").all()
+        for i, elem in enumerate(all_elements):
+            if i > 150:
+                break
+            try:
+                text = elem.inner_text().strip()
+                if not text or len(text) == 0 or len(text) > 100:
+                    continue
+                if is_blacklisted(text):
+                    continue
+                styles = elem.evaluate(
+                    """el => {
+                    const s = window.getComputedStyle(el);
+                    return {
+                        borderColor: s.borderColor,
+                        backgroundColor: s.backgroundColor,
+                        color: s.color
+                    };
+                }"""
+                )
+                classes = elem.get_attribute("class") or ""
+                all_colors = " ".join(str(v) for v in styles.values()).lower()
+                green_patterns = [
+                    "rgb(26, 179, 92)",
+                    "rgb(233, 251, 241)",
+                    "rgb(34, 197, 94)",
+                    "rgb(22, 163, 74)",
+                    "rgb(16, 185, 129)",
+                    "rgb(5, 150, 105)",
+                    "rgb(0, 128, 0)",
+                    "rgb(0, 255, 0)",
+                    "rgb(76, 175, 80)",
+                    "rgb(46, 125, 50)",
+                    "rgb(67, 160, 71)",
+                    "rgb(102, 187, 106)",
+                    "rgb(139, 195, 74)",
+                    "rgb(156, 204, 101)",
+                    "rgb(200, 230, 201)",
+                    "rgb(165, 214, 167)",
+                ]
+                is_green = (
+                    any(color in all_colors for color in green_patterns)
+                    or "correct" in classes.lower()
+                    or "success" in classes.lower()
+                    or "iscorrect-true" in classes.lower()
+                )
+                if is_green:
+                    if text not in results:
+                        is_duplicate = False
+                        for existing in results:
+                            if text in existing or existing in text:
+                                is_duplicate = True
+                                break
+                        if not is_duplicate:
+                            results.append(text)
+                            print_success(f"  ✓ VERT: {text}")
+            except Exception:
+                continue
+        print_info(f"  Total verts: {len(results)}")
     except Exception as e:
-        print_error(f"Erreur lors du remplissage : {e}")
+        print_error(f"Erreur find_choice_answers: {e}")
+    return results
+
+
+def find_order_answer(page):
+    results = []
+    try:
+        print_info("  Recherche phrase verte ORDER...")
+        all_elements = page.locator("span:visible, div:visible, p:visible").all()
+        green_sentence = None
+        for elem in all_elements[:100]:
+            try:
+                text = elem.inner_text().strip()
+                if not text or is_blacklisted(text):
+                    continue
+                color = elem.evaluate("el => window.getComputedStyle(el).color")
+                classes = elem.get_attribute("class") or ""
+                is_green = (
+                    "rgb(34, 197, 94)" in str(color)
+                    or "rgb(22, 163, 74)" in str(color)
+                    or "rgb(0, 128, 0)" in str(color)
+                    or "rgb(26, 179, 92)" in str(color)
+                    or "correct" in classes.lower()
+                )
+                if is_green and len(text) > 10:
+                    green_sentence = text
+                    print_info(f"  Phrase verte: {green_sentence}")
+                    break
+            except Exception:
+                continue
+        if green_sentence:
+            words = green_sentence.split()
+            cleaned_words = []
+            for word in words:
+                word = word.strip()
+                if word:
+                    cleaned_words.append(word)
+            results = cleaned_words
+            print_info(f"  Mots extraits: {results}")
+    except Exception as e:
+        print_error(f"Erreur find_order_answer: {e}")
+    return results
+
+
+def find_any_correct_elements(page):
+    results = []
+    try:
+        selectors = ['[class*="correct"]', '[class*="success"]', '[class*="isCorrect-true"]']
+        for selector in selectors:
+            try:
+                elements = page.locator(selector).all()[:10]
+                for elem in elements:
+                    text = elem.inner_text().strip()
+                    if text and len(text) < 100 and text not in results:
+                        results.append(text)
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return results
+
+
+def detect_truefalse_answer(page):
+    try:
+        incorrect = page.locator("text=Incorrect, text=Wrong").count()
+        if incorrect > 0:
+            return ["false"]
+        correct = page.locator("text=Correct, text=Right").count()
+        if correct > 0:
+            return ["true"]
+        return ["true"]
+    except Exception:
+        return ["true"]
+
+
+def fill_all_answers(page, answers_db):
+    print_info("PHASE 2: Remplissage automatique")
+    filled_count = 0
+    for qa in answers_db:
+        try:
+            q_num = qa["question_num"]
+            q_type = qa["type"]
+            answers = qa["answers"]
+            print_info(f"Q{q_num} ({q_type}): {answers}")
+            time.sleep(1)
+            if q_type == "text":
+                success = fill_text_question(page, answers)
+            elif q_type == "choice":
+                success = fill_choice_question(page, answers)
+            elif q_type == "truefalse":
+                success = fill_truefalse_question(page, answers)
+            elif q_type == "order":
+                success = fill_order_question(page, answers)
+            else:
+                success = False
+            if not success:
+                print_error(f"Échec Q{q_num}")
+                break
+            filled_count += 1
+            time.sleep(0.5)
+        except Exception as e:
+            print_error(f"Erreur Q{qa['question_num']}: {e}")
+            break
+    return filled_count
+
+
+def fill_text_question(page, answers):
+    try:
+        page.wait_for_selector(SELECTORS["input_field"], timeout=3000, state="visible")
+        input_fields = page.locator(SELECTORS["input_field"]).all()
+        min_count = min(len(input_fields), len(answers))
+        for i in range(min_count):
+            answer = answers[i].strip()
+            input_fields[i].click()
+            time.sleep(0.2)
+            input_fields[i].fill(answer)
+            time.sleep(0.2)
+        if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
+            return False
+        time.sleep(0.5)
+        wait_and_click(page, SELECTORS["continue_button"], timeout=3000)
+        time.sleep(0.5)
+        print_success("Rempli")
+        return True
+    except Exception as e:
+        print_error(f"Erreur: {e}")
         return False
 
 
-def solve_exercise(page: Page, max_questions: int = 100) -> int:
-    """
-    Résout un exercice complet automatiquement en 2 phases
-
-    Phase 1 : Collecte toutes les réponses
-    Phase 2 : Retour au début et remplissage automatique
-
-    Args:
-        page: Page Playwright
-        max_questions: Nombre maximum de questions à traiter (sécurité)
-
-    Returns:
-        int: Nombre de questions résolues
-    """
-    print_info("🚀 PHASE 1 : Collecte des réponses...")
-    print_info("Le bot va parcourir toutes les questions pour récupérer les réponses")
-
-    answers = []
-
-    for question_num in range(1, max_questions + 1):
-        # Vérifier si le champ input existe encore (sinon, exercice terminé)
-        try:
-            page.wait_for_selector(SELECTORS["input_field"], timeout=2000, state="visible")
-        except PlaywrightTimeout:
-            print_info("Plus de questions à collecter")
-            break
-
-        # Collecter la réponse
-        answer = collect_answer(page, question_num)
-        if answer:
-            answers.append(answer)
-            print_info(f"✓ {len(answers)} réponses collectées")
-        else:
-            print_error(f"Échec collecte question {question_num}")
-            break
-
-        # Petite pause entre chaque question
-        time.sleep(0.5)
-
-    if not answers:
-        print_error("Aucune réponse collectée")
-        return 0
-
-    print_success(f"✅ {len(answers)} questions collectées !")
-    print("")
-    print("=" * 60)
-    print("📋 RÉPONSES COLLECTÉES :")
-    for i, answer in enumerate(answers, 1):
-        if isinstance(answer, list):
-            if len(answer) == 1:
-                print(f"  Question {i} : {answer[0]}")
-            else:
-                print(f"  Question {i} : {' / '.join(answer)} ({len(answer)} trous)")
-        else:
-            print(f"  Question {i} : {answer}")
-    print("=" * 60)
-    print("")
-
-    # Phase 2 : Attendre que l'utilisateur retourne au début
-    print_info("🔄 PHASE 2 : Remplissage automatique")
-    print_info("Retournez MANUELLEMENT au début de l'exercice")
-    print_info("(cliquez sur 'Recommencer' ou naviguez vers l'exercice)")
-    input("Appuyez sur Entrée quand vous êtes prêt à remplir automatiquement...")
-
-    # Vérifier qu'on est bien au début
-    time.sleep(1)
+def fill_choice_question(page, answers):
     try:
-        page.wait_for_selector(SELECTORS["input_field"], timeout=3000, state="visible")
-    except PlaywrightTimeout:
-        print_error("Pas de champ de réponse détecté. Assurez-vous d'être au début de l'exercice")
-        return 0
+        clicked = 0
+        for answer_text in answers:
+            variants = get_text_variants(answer_text)
+            print_info(f"  Recherche: {answer_text}")
+            button_found = False
 
-    print_info("🚀 Démarrage du remplissage automatique...")
+            for variant in variants:
+                if button_found:
+                    break
+                try:
+                    button = page.locator(f"div.c-cFbiKG:has-text({variant})").first
+                    button.wait_for(state="visible", timeout=500)
+                    button.click()
+                    button_found = True
+                    clicked += 1
+                    time.sleep(0.4)
+                    print_success(f"  ✓ Cliqué: {variant}")
+                    break
+                except PlaywrightTimeout:
+                    pass
 
-    # Remplir toutes les questions avec les réponses stockées
-    questions_filled = 0
-    for i, answer in enumerate(answers, 1):
-        if fill_answer(page, answer, i):
-            questions_filled += 1
-        else:
-            print_error(f"Échec remplissage question {i}")
-            break
+            if not button_found:
+                for variant in variants:
+                    if button_found:
+                        break
+                    selectors = [
+                        f'button:has-text("{variant}")',
+                        f'[role="button"]:has-text("{variant}")',
+                    ]
+                    for selector in selectors:
+                        try:
+                            elem = page.locator(f"{selector}:visible").first
+                            elem.wait_for(state="visible", timeout=500)
+                            elem.click()
+                            button_found = True
+                            clicked += 1
+                            time.sleep(0.4)
+                            print_success(f"  ✓ Cliqué (fallback): {variant}")
+                            break
+                        except PlaywrightTimeout:
+                            pass
 
-        time.sleep(0.5)
+            if not button_found:
+                for variant in variants:
+                    if button_found:
+                        break
+                    try:
+                        elem = page.locator(f'*:visible:has-text("{variant}")').first
+                        elem.wait_for(state="visible", timeout=500)
+                        elem.click()
+                        button_found = True
+                        clicked += 1
+                        time.sleep(0.4)
+                        print_success(f"  ✓ Cliqué (dernier recours): {variant}")
+                        break
+                    except PlaywrightTimeout:
+                        pass
 
-    print_success(f"✅ Exercice terminé ! {questions_filled}/{len(answers)} questions remplies")
-    return questions_filled
+            if not button_found:
+                print_error(f"  ✗ Non trouvé: {answer_text}")
 
-
-def navigate_to_unit(page: Page, unit_url: Optional[str] = None) -> bool:
-    """
-    Navigue vers une unité spécifique
-
-    Args:
-        page: Page Playwright
-        unit_url: URL de l'unité (optionnel)
-
-    Returns:
-        bool: True si navigation réussie
-    """
-    try:
-        if unit_url:
-            print_info(f"Navigation vers : {unit_url}")
-            page.goto(unit_url)
-            time.sleep(1)
-            return True
-        else:
-            print_info("Aucune URL d'unité fournie, navigation manuelle nécessaire")
+        if clicked == 0:
             return False
+
+        time.sleep(0.5)
+        if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
+            return False
+        time.sleep(0.5)
+        wait_and_click(page, SELECTORS["continue_button"], timeout=3000)
+        time.sleep(0.5)
+        print_success("Rempli")
+        return True
     except Exception as e:
-        print_error(f"Erreur de navigation : {e}")
+        print_error(f"Erreur: {e}")
+        return False
+
+
+def fill_truefalse_question(page, answers):
+    try:
+        answer = clean_text(answers[0]).lower()
+        if answer not in ["true", "false"]:
+            return False
+        try:
+            button = page.locator(f'button:has-text("{answer}")').first
+            button.wait_for(state="visible", timeout=1000)
+            button.click()
+            time.sleep(0.3)
+            print_success(f"  {answer.upper()}")
+        except PlaywrightTimeout:
+            pass
+        if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
+            return False
+        time.sleep(0.5)
+        wait_and_click(page, SELECTORS["continue_button"], timeout=3000)
+        time.sleep(0.5)
+        print_success("Rempli")
+        return True
+    except Exception as e:
+        print_error(f"Erreur: {e}")
+        return False
+
+
+def fill_order_question(page, answers):
+    try:
+        print_info("  Remplissage ORDER...")
+        print_info(f"  Ordre: {answers}")
+        for word in answers:
+            variants = get_text_variants(word)
+            print_info(f"  Cherche: {word}")
+            clicked = False
+            for variant in variants:
+                if clicked:
+                    break
+                selectors = [
+                    f'button:text-is("{variant}")',
+                    f'button:has-text("{variant}")',
+                ]
+                for selector in selectors:
+                    try:
+                        btn = page.locator(f"{selector}:visible").first
+                        btn.wait_for(state="visible", timeout=500)
+                        btn.click()
+                        clicked = True
+                        time.sleep(0.4)
+                        print_success(f"  Cliqué: {word}")
+                        break
+                    except PlaywrightTimeout:
+                        continue
+            if not clicked:
+                print_info(f"  Fallback: {word}")
+                try:
+                    all_buttons = page.locator("button:visible").all()
+                    for btn in all_buttons:
+                        try:
+                            btn_text = btn.inner_text().strip()
+                            for variant in variants:
+                                if texts_match(btn_text, variant):
+                                    btn.click()
+                                    clicked = True
+                                    time.sleep(0.4)
+                                    print_success(f"  Cliqué (fallback): {word}")
+                                    break
+                            if clicked:
+                                break
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+            if not clicked:
+                print_error(f"  Non trouvé: {word}")
+                return False
+        time.sleep(0.5)
+        if not wait_and_click(page, SELECTORS["validate_button"], timeout=3000):
+            return False
+        time.sleep(0.5)
+        wait_and_click(page, SELECTORS["continue_button"], timeout=3000)
+        time.sleep(0.5)
+        print_success("Ordre rempli")
+        return True
+    except Exception as e:
+        print_error(f"Erreur: {e}")
+        return False
+
+
+def check_retry_button(page, click=False):
+    try:
+        selectors = ['button:has-text("Réessayer")', 'button:has-text("Ressayer")']
+        for selector in selectors:
+            try:
+                retry_btn = page.locator(selector).first
+                retry_btn.wait_for(state="visible", timeout=2000)
+                if click:
+                    print_info("Clic Réessayer...")
+                    retry_btn.click()
+                    time.sleep(2)
+                    print_success("Retour au début")
+                return True
+            except PlaywrightTimeout:
+                continue
+        return False
+    except Exception as e:
+        print_error(f"Erreur: {e}")
         return False
