@@ -555,7 +555,7 @@ def fill_choice_question(page, answers):
                 if button_found:
                     break
                 try:
-                    button = page.locator(f'div.c-cFbiKG:has-text("{variant}")').first
+                    button = page.locator(f"div.c-cFbiKG:has-text({variant})").first
                     button.wait_for(state="visible", timeout=500)
                     button.click()
                     button_found = True
