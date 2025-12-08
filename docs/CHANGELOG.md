@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 - Lint
 - Flake lint
 - Mypy lint
+- Format & lint
+- Removed useless quotes
 
 ### Documentation
 
@@ -21,6 +23,12 @@ All notable changes to this project will be documented in this file.
 - Update changelog [skip ci]
 - Update changelog [skip ci]
 - Moved docs files on doc folder
+- Update changelog [skip ci]
+- Improve doc lint mypy
+
+### Features
+
+- Differents exo types & methods & auto retry
 
 ### Miscellaneous Tasks
 
