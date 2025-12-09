@@ -6,45 +6,8 @@ Vérifie les MOTS ENTIERS dans la blacklist (pas sous-chaînes)
 import time
 import re
 from playwright.sync_api import TimeoutError as PlaywrightTimeout
-from .utils import wait_and_click, print_success, print_error, print_info
-
-SELECTORS = {
-    "input_field": 'input.c-iJOJc, input[type="text"]',
-    "validate_button": 'button:has-text("Valider")',
-    "correct_answer": "span.c-gUxMKR-bkfbUO-isCorrect-true",
-    "continue_button": 'button.c-jUtMbh, button.c-lfgsZH:has-text("Continuer")',
-    "retry_button": 'button:has-text("Réessayer"), button:has-text("Ressayer")',
-}
-
-# Mots à ignorer - attention: vérifiés en MOTS ENTIERS maintenant
-BLACKLIST_WORDS = [
-    "Incorrect",
-    "Correct",
-    "Wrong",
-    "Faux",
-    "Vrai",
-    "Error",
-    "Success",
-    "Valider",
-    "Continuer",
-    "Revenir",
-    "Ressayer",
-    "Réessayer",
-    "Pause",
-    "Play",
-    "Mute",
-    "Skip",
-    "Select the right answer",
-    "Choose",
-    "Click",
-    "Put the elements in the right order",
-    "Sélectionnez le premier élément",
-    "Listen to",
-    "Max is writing",
-    "Accueil",
-    "Toutes les leçons",
-    "Actualités",
-]
+from .utils import wait_and_click, print_success, print_error, print_info, is_color_green
+from .constants import SELECTORS, BLACKLIST_WORDS, GREEN_COLORS
 
 
 def normalize_quotes(text):
@@ -333,13 +296,9 @@ def find_green_text_elements(page):
                     continue
                 color = span.evaluate("el => window.getComputedStyle(el).color")
                 classes = span.get_attribute("class") or ""
-                is_green = (
-                    "rgb(34, 197, 94)" in str(color)
-                    or "rgb(22, 163, 74)" in str(color)
-                    or "rgb(0, 128, 0)" in str(color)
-                    or "rgb(26, 179, 92)" in str(color)
-                    or "correct" in classes.lower()
-                )
+                # Utilisation de la nouvelle fonction
+                is_green = is_color_green(str(color)) or "correct" in classes.lower()
+
                 if is_green:
                     results.append(text)
                     print_info(f"  Texte vert: {text}")
@@ -375,31 +334,17 @@ def find_choice_answers(page):
                 }"""
                 )
                 classes = elem.get_attribute("class") or ""
-                all_colors = " ".join(str(v) for v in styles.values()).lower()
-                green_patterns = [
-                    "rgb(26, 179, 92)",
-                    "rgb(233, 251, 241)",
-                    "rgb(34, 197, 94)",
-                    "rgb(22, 163, 74)",
-                    "rgb(16, 185, 129)",
-                    "rgb(5, 150, 105)",
-                    "rgb(0, 128, 0)",
-                    "rgb(0, 255, 0)",
-                    "rgb(76, 175, 80)",
-                    "rgb(46, 125, 50)",
-                    "rgb(67, 160, 71)",
-                    "rgb(102, 187, 106)",
-                    "rgb(139, 195, 74)",
-                    "rgb(156, 204, 101)",
-                    "rgb(200, 230, 201)",
-                    "rgb(165, 214, 167)",
-                ]
+
+                # Vérification avec is_color_green
                 is_green = (
-                    any(color in all_colors for color in green_patterns)
+                    is_color_green(str(styles['color']))
+                    or is_color_green(str(styles['backgroundColor']))
+                    or is_color_green(str(styles['borderColor']))
                     or "correct" in classes.lower()
                     or "success" in classes.lower()
                     or "iscorrect-true" in classes.lower()
                 )
+
                 if is_green:
                     if text not in results:
                         is_duplicate = False
@@ -431,13 +376,10 @@ def find_order_answer(page):
                     continue
                 color = elem.evaluate("el => window.getComputedStyle(el).color")
                 classes = elem.get_attribute("class") or ""
-                is_green = (
-                    "rgb(34, 197, 94)" in str(color)
-                    or "rgb(22, 163, 74)" in str(color)
-                    or "rgb(0, 128, 0)" in str(color)
-                    or "rgb(26, 179, 92)" in str(color)
-                    or "correct" in classes.lower()
-                )
+
+                # Utilisation de la nouvelle fonction
+                is_green = is_color_green(str(color)) or "correct" in classes.lower()
+
                 if is_green and len(text) > 10:
                     green_sentence = text
                     print_info(f"  Phrase verte: {green_sentence}")
