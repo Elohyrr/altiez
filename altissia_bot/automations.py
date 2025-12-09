@@ -497,7 +497,7 @@ def fill_choice_question(page, answers):
                 if button_found:
                     break
                 try:
-                    button = page.locator(f"div.c-cFbiKG:has-text({variant})").first
+                    button = page.locator("div.c-cFbiKG").filter(has_text=variant).first
                     button.wait_for(state="visible", timeout=500)
                     button.click()
                     button_found = True
@@ -512,29 +512,25 @@ def fill_choice_question(page, answers):
                 for variant in variants:
                     if button_found:
                         break
-                    selectors = [
-                        f'button:has-text("{variant}")',
-                        f'[role="button"]:has-text("{variant}")',
-                    ]
-                    for selector in selectors:
-                        try:
-                            elem = page.locator(f"{selector}:visible").first
-                            elem.wait_for(state="visible", timeout=500)
-                            elem.click()
-                            button_found = True
-                            clicked += 1
-                            time.sleep(0.4)
-                            print_success(f"  ✓ Cliqué (fallback): {variant}")
-                            break
-                        except PlaywrightTimeout:
-                            pass
+                    # Fallback selectors using safe filter()
+                    try:
+                        elem = page.locator("button, [role='button']").filter(has_text=variant).first
+                        elem.wait_for(state="visible", timeout=500)
+                        elem.click()
+                        button_found = True
+                        clicked += 1
+                        time.sleep(0.4)
+                        print_success(f"  ✓ Cliqué (fallback): {variant}")
+                        break
+                    except PlaywrightTimeout:
+                        pass
 
             if not button_found:
                 for variant in variants:
                     if button_found:
                         break
                     try:
-                        elem = page.locator(f'*:visible:has-text("{variant}")').first
+                        elem = page.locator("*:visible").filter(has_text=variant).first
                         elem.wait_for(state="visible", timeout=500)
                         elem.click()
                         button_found = True
@@ -600,21 +596,17 @@ def fill_order_question(page, answers):
             for variant in variants:
                 if clicked:
                     break
-                selectors = [
-                    f'button:text-is("{variant}")',
-                    f'button:has-text("{variant}")',
-                ]
-                for selector in selectors:
-                    try:
-                        btn = page.locator(f"{selector}:visible").first
-                        btn.wait_for(state="visible", timeout=500)
-                        btn.click()
-                        clicked = True
-                        time.sleep(0.4)
-                        print_success(f"  Cliqué: {word}")
-                        break
-                    except PlaywrightTimeout:
-                        continue
+                try:
+                    # Prefer exact match first if possible, or robust filter
+                    # Using filter(has_text=...) is robust against special chars
+                    btn = page.locator("button:visible").filter(has_text=variant).first
+                    btn.wait_for(state="visible", timeout=500)
+                    btn.click()
+                    clicked = True
+                    time.sleep(0.4)
+                    print_success(f"  Cliqué: {word}")
+                except PlaywrightTimeout:
+                    continue
             if not clicked:
                 print_info(f"  Fallback: {word}")
                 try:
