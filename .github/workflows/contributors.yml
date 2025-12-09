@@ -2,18 +2,25 @@ name: Add contributors
 on:
   schedule:
     - cron: '20 20 * * *'
-  push:
-    branches:
-      - main
-
+  #push:
+  #  branches:
+  #    - main
+  workflow_dispatch:  # Permet de lancer manuellement
+  
 permissions:
   contents: write
+
+concurrency:
+  group: update-docs-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   add-contributors:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Nécessaire pour récupérer tout l'historique et tous les contributeurs
     - uses: BobAnkh/add-contributors@master
       with:
         CONTRIBUTOR: '## Contributors'
