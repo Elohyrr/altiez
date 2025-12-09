@@ -8,6 +8,32 @@ Thank you to everyone who has contributed to this project! 🎉
 
 ## Contributors
 
+<table>
+<tr>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/Elohyrr>
+            <img src=https://avatars.githubusercontent.com/u/118767910?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Elohyrr/>
+            <br />
+            <sub style="font-size:14px"><b>Elohyrr</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/voidsponge>
+            <img src=https://avatars.githubusercontent.com/u/92320281?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Sρ0ɳɠҽ████/>
+            <br />
+            <sub style="font-size:14px"><b>Sρ0ɳɠҽ████</b></sub>
+        </a>
+    </td>
+    <td align="center" style="word-wrap: break-word; width: 150.0; height: 150.0">
+        <a href=https://github.com/Tokzeen>
+            <img src=https://avatars.githubusercontent.com/u/115714322?v=4 width="100;"  style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;padding-top:10px" alt=Tokzeen/>
+            <br />
+            <sub style="font-size:14px"><b>Tokzeen</b></sub>
+        </a>
+    </td>
+</tr>
+</table>
+
 <!-- This list will be automatically updated by the all-contributors bot -->
 <!-- ALL-CONTRIBUTORS-LIST:START -->
 <!-- prettier-ignore-start -->
