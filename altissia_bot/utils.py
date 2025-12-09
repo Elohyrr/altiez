@@ -88,11 +88,11 @@ def is_color_green(color_string: str) -> bool:
         # Verts très clairs (backgrounds)
         # ex: rgb(233, 251, 241) -> R=233, G=251, B=241
         if g >= r and g >= b and g > 200:
-             # Si c'est très clair, on vérifie juste que c'est pas rouge ou bleu
-             # Mais attention au blanc (255, 255, 255)
-             if r > 240 and b > 240 and g > 240:
-                 return False # Blanc
-             return True
+            # Si c'est très clair, on vérifie juste que c'est pas rouge ou bleu
+            # Mais attention au blanc (255, 255, 255)
+            if r > 240 and b > 240 and g > 240:
+                return False  # Blanc
+            return True
 
         return False
     except ValueError:
