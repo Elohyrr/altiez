@@ -50,6 +50,17 @@ commit_preprocessors = [
 ]
 # Regex for parsing and grouping commits
 commit_parsers = [
+    # Skip automated changelog and contributor updates FIRST (order matters!)
+    { message = "^docs: update changelog", skip = true },
+    { message = "(?i).*\\[skip ci\\]", skip = true },
+    { message = "^docs\\(README\\): update contributors", skip = true },
+    { message = "(?i).*update changelog.*", skip = true },
+    { message = "(?i).*update contributors.*", skip = true },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore\\(deps.*\\)", skip = true },
+    { message = "^chore\\(pr\\)", skip = true },
+    { message = "^chore\\(pull\\)", skip = true },
+    # Group commits by type
     { message = "^feat", group = "<!-- 0 -->⛰️  Features" },
     { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
     { message = "^doc", group = "<!-- 2 -->📚 Documentation" },
@@ -57,18 +68,10 @@ commit_parsers = [
     { message = "^refactor", group = "<!-- 4 -->🚜 Refactor" },
     { message = "^style", group = "<!-- 5 -->🎨 Styling" },
     { message = "^test", group = "<!-- 6 -->🧪 Testing" },
-    { message = "^chore\\(release\\): prepare for", skip = true },
-    { message = "^chore\\(deps.*\\)", skip = true },
-    { message = "^chore\\(pr\\)", skip = true },
-    { message = "^chore\\(pull\\)", skip = true },
     { message = "^chore", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
     { message = "^ci", group = "<!-- 8 -->👷 CI" },
     { message = "^build", group = "<!-- 9 -->🏗️ Build" },
     { message = "^revert", group = "<!-- 10 -->◀️ Revert" },
-    # Skip automated changelog and contributor updates
-    { message = ".*update changelog.*", skip = true },
-    { message = ".*\\[skip ci\\].*", skip = true },
-    { message = ".*update contributors.*", skip = true },
 ]
 # Protect breaking changes from being skipped due to matching a skipping commit_parser
 protect_breaking_commits = false

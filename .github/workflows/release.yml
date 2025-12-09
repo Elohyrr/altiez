@@ -41,6 +41,8 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     needs: validate-commit
+    # S'exécute même si validate-commit est skippé, mais pas si le commit actuel contient [skip ci]
+    if: ${{ always() && !contains(github.event.head_commit.message, '[skip ci]') && (needs.validate-commit.result == 'success' || needs.validate-commit.result == 'skipped') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,10 +57,7 @@ jobs:
           
       - name: Generate changelog
         run: |
-          # Exclut les commits contenant [skip ci] ou update changelog
-          git-cliff --config cliff.toml --output docs/CHANGELOG.md \
-            --exclude-path "*[skip ci]*" \
-            --exclude-path "*update changelog*"
+          git-cliff --config cliff.toml --output docs/CHANGELOG.md
           
       - name: Commit changelog
         run: |
