@@ -20,9 +20,15 @@ All notable changes to this project will be documented in this file.
 - Mypy lint
 - Format & lint
 - Removed useless quotes
+- Multi choices fixing
+- Lint
 - Template changelog
 - Cliff repo
+- Merge fix green color unused
+- Merge pull request 
+- Bug
 - Multi choices handling 
+- Rm shit
 
 
 ### 📚 Documentation
