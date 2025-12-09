@@ -94,8 +94,8 @@ def run_bot(headless=False):
                     # Afficher les réponses collectées
                     print_header("RÉPONSES COLLECTÉES")
                     for i, qa in enumerate(answers_db, 1):
-                        print(f"  Q{i} ({qa['type']}): {qa['answers']}")
-                    print("-" * 60)
+                        print_info(f"  Q{i} ({qa['type']}): {qa['answers']}")
+                    print_info("-" * 60)
 
                     # Attendre 2 secondes puis cliquer
                     time.sleep(2)
@@ -120,7 +120,6 @@ def run_bot(headless=False):
                     break
 
         except KeyboardInterrupt:
-            print("\n")
             print_info("Interruption par l'utilisateur")
         except Exception as e:
             print_error(f"Erreur: {e}")
@@ -142,7 +141,7 @@ def main():
     try:
         run_bot(headless=args.headless)
     except KeyboardInterrupt:
-        print("\nProgramme interrompu")
+        print_info("Programme interrompu")
 
 
 if __name__ == "__main__":
