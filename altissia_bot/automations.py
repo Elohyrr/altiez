@@ -337,9 +337,9 @@ def find_choice_answers(page):
 
                 # Vérification avec is_color_green
                 is_green = (
-                    is_color_green(str(styles['color']))
-                    or is_color_green(str(styles['backgroundColor']))
-                    or is_color_green(str(styles['borderColor']))
+                    is_color_green(str(styles["color"]))
+                    or is_color_green(str(styles["backgroundColor"]))
+                    or is_color_green(str(styles["borderColor"]))
                     or "correct" in classes.lower()
                     or "success" in classes.lower()
                     or "iscorrect-true" in classes.lower()
@@ -514,7 +514,9 @@ def fill_choice_question(page, answers):
                         break
                     # Fallback selectors using safe filter()
                     try:
-                        elem = page.locator("button, [role='button']").filter(has_text=variant).first
+                        elem = (
+                            page.locator("button, [role='button']").filter(has_text=variant).first
+                        )
                         elem.wait_for(state="visible", timeout=500)
                         elem.click()
                         button_found = True
