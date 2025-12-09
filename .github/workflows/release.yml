@@ -3,7 +3,7 @@ name: Update Changelog
 on:
   push:
     branches:
-      - ci/improvements
+      - main
 
 permissions:
   contents: write

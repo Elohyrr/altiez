@@ -6,6 +6,9 @@ on:
     branches:
       - ci/improvements
 
+permissions:
+  contents: write
+
 jobs:
   add-contributors:
     runs-on: ubuntu-latest
