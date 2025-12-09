@@ -16,8 +16,8 @@ jobs:
   # Vérifie d'abord que le commit est bien formaté
   validate-commit:
     runs-on: ubuntu-latest
-    # Skip si c'est un commit de changelog automatique
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    # Skip si c'est un commit de changelog automatique OU si c'est dans un fork
+    if: ${{ github.repository == 'Elohyrr/altiez' && !contains(github.event.head_commit.message, '[skip ci]') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,8 +45,8 @@ jobs:
   changelog:
     runs-on: ubuntu-latest
     needs: validate-commit
-    # S'exécute même si validate-commit est skippé, mais pas si le commit actuel contient [skip ci]
-    if: ${{ always() && !contains(github.event.head_commit.message, '[skip ci]') && (needs.validate-commit.result == 'success' || needs.validate-commit.result == 'skipped') }}
+    # S'exécute même si validate-commit est skippé, mais pas si le commit actuel contient [skip ci] OU si c'est dans un fork
+    if: ${{ github.repository == 'Elohyrr/altiez' && always() && !contains(github.event.head_commit.message, '[skip ci]') && (needs.validate-commit.result == 'success' || needs.validate-commit.result == 'skipped') }}
     steps:
       - uses: actions/checkout@v4
         with:

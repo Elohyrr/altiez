@@ -1,12 +1,12 @@
 name: Add contributors
 on:
+  pull_request:
+    branches:
+      - main
   schedule:
     - cron: '20 20 * * *'
-  #push:
-  #  branches:
-  #    - main
   workflow_dispatch:  # Permet de lancer manuellement
-  
+
 permissions:
   contents: write
 
