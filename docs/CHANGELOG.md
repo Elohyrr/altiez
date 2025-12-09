@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 - Lint
 - Template changelog
 - Cliff repo
+- Merge fix green color unused
 
 
 ### 📚 Documentation
