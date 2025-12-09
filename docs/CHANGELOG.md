@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 
 ### 📚 Documentation
 
+- **(contributors)** Add voidsponge
 - Moved docs files on doc folder
 - Improve doc lint mypy
 - Removed useless changelog lines
