@@ -6,8 +6,10 @@ Thank you to everyone who has contributed to this project! 🎉
 
 - **[@Elohyrr](https://github.com/Elohyrr)** - Project creator and maintainer
 
-### Contributors
+## Contributors
 
+<!-- contributors:start -->
+<!-- contributors:end -->
 ---
 
 ## How to become a contributor
