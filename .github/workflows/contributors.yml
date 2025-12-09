@@ -1,0 +1,68 @@
+name: Update Contributors
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Permet de lancer manuellement
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-contributors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install all-contributors CLI
+        run: npm install -g all-contributors-cli
+        
+      - name: Get all contributors from git history
+        id: get_contributors
+        run: |
+          # Récupère tous les contributeurs uniques de l'historique git
+          git log --format='%aN|%aE' | sort -u > contributors.txt
+          echo "Found $(wc -l < contributors.txt) contributors"
+          cat contributors.txt
+          
+      - name: Add contributors
+        run: |
+          # Configure all-contributors si pas déjà fait
+          if [ ! -f .all-contributorsrc ]; then
+            all-contributors init
+          fi
+          
+          # Lit chaque contributeur et l'ajoute
+          while IFS='|' read -r name email; do
+            # Récupère le username GitHub depuis l'email
+            username=$(echo "$email" | sed 's/@users.noreply.github.com//' | sed 's/[0-9]*+//')
+            
+            # Si l'email est un email GitHub actions, on skip
+            if [[ "$email" == *"github-actions"* ]]; then
+              continue
+            fi
+            
+            echo "Adding contributor: $name ($username)"
+            
+            # Ajoute le contributeur (code par défaut)
+            all-contributors add "$username" code 2>/dev/null || true
+          done < contributors.txt
+          
+      - name: Generate contributors list
+        run: all-contributors generate
+        
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add CONTRIBUTORS.md .all-contributorsrc
+          git diff --quiet && git diff --staged --quiet || (git commit -m "docs: update contributors list [skip ci]" && git push)
