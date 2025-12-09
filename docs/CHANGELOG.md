@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### 🐛 Bug Fixes
 
+- **(cliff)** Skip automated commits before grouping rules
 - Refactor src files & simplify ci
 - Reformat with black and fix ci
 - Lint
@@ -23,22 +24,8 @@ All notable changes to this project will be documented in this file.
 
 ### 📚 Documentation
 
-- **(README)** Update contributors
-- **(README)** Update contributors
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
 - Moved docs files on doc folder
-- Update changelog [skip ci]
 - Improve doc lint mypy
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
-- Update changelog [skip ci]
 - Removed useless changelog lines
 
 
@@ -55,7 +42,6 @@ All notable changes to this project will be documented in this file.
 - Simplify lint & release
 - Fix lint
 - Removed docs lint & auto increment contributors
-- Update changelog
 - Fix dev branch name
 - Use library for auto add contributors
 - Fix md file
