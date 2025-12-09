@@ -85,4 +85,4 @@ sort_commits = "oldest"
 
 [remote.github]
 owner = "Elohyrr"
-repo = "altissia-bot"
+repo = "altiez"
