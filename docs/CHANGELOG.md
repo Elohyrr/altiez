@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Moved docs files on doc folder
 - Update changelog [skip ci]
 - Improve doc lint mypy
+- Update changelog [skip ci]
 
 ### Features
 
