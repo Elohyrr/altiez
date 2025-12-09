@@ -657,6 +657,20 @@ def check_retry_button(page, click=False):
                     retry_btn.click()
                     time.sleep(2)
                     print_success("Retour au début")
+
+                    # Check for "Start" button (Commencer) if we landed on the start page
+                    start_selectors = ['button:has-text("Commencer")', 'button:has-text("Start")']
+                    for start_sel in start_selectors:
+                        try:
+                            start_btn = page.locator(start_sel).first
+                            if start_btn.is_visible(timeout=3000):
+                                print_info("Bouton 'Commencer' détecté, clic en cours...")
+                                start_btn.click()
+                                time.sleep(2)
+                                print_success("Clic sur Commencer effectué")
+                                break
+                        except Exception:
+                            continue
                 return True
             except PlaywrightTimeout:
                 continue
