@@ -119,3 +119,7 @@ def print_error(text: str):
 def print_info(text: str):
     """Affiche un message d'information"""
     logger.info(f"ℹ {text}")
+
+"""
+Utilitaires et helpers
+"""
