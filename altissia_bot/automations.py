@@ -7,7 +7,7 @@ import time
 import re
 from playwright.sync_api import TimeoutError as PlaywrightTimeout
 from .utils import wait_and_click, print_success, print_error, print_info, is_color_green
-from .constants import SELECTORS, BLACKLIST_WORDS, GREEN_COLORS
+from .constants import SELECTORS, BLACKLIST_WORDS
 
 
 def normalize_quotes(text):
