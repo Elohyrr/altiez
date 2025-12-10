@@ -488,60 +488,58 @@ def fill_text_question(page, answers):
 def fill_choice_question(page, answers):
     try:
         clicked = 0
+        selectors = [
+            "div.c-cFbiKG",
+            "button, [role='button']",
+            "*:visible"
+        ]
+
         for answer_text in answers:
             variants = get_text_variants(answer_text)
             print_info(f"  Recherche: {answer_text}")
             button_found = False
 
+            # PHASE 1: Tentative correspondance EXACTE (tous selecteurs)
+            # On cherche une correspondance stricte pour éviter "animals" -> "animals and people"
             for variant in variants:
                 if button_found:
                     break
-                try:
-                    button = page.locator("div.c-cFbiKG").filter(has_text=variant).first
-                    button.wait_for(state="visible", timeout=500)
-                    button.click()
-                    button_found = True
-                    clicked += 1
-                    time.sleep(0.4)
-                    print_success(f"  ✓ Cliqué: {variant}")
+                pattern = re.compile(r"^\s*" + re.escape(variant) + r"\s*$", re.IGNORECASE)
+                for selector in selectors:
+                    try:
+                        elem = page.locator(selector).filter(has_text=pattern).first
+                        # Timeout court car c'est une optimisation
+                        elem.wait_for(state="visible", timeout=500)
+                        elem.click()
+                        button_found = True
+                        clicked += 1
+                        time.sleep(0.4)
+                        print_success(f"  ✓ Cliqué (exact): {variant} [{selector}]")
+                        break
+                    except PlaywrightTimeout:
+                        continue
+                if button_found:
                     break
-                except PlaywrightTimeout:
-                    pass
 
+            # PHASE 2: Tentative correspondance PARTIELLE (fallback)
             if not button_found:
                 for variant in variants:
                     if button_found:
                         break
-                    # Fallback selectors using safe filter()
-                    try:
-                        elem = (
-                            page.locator("button, [role='button']").filter(has_text=variant).first
-                        )
-                        elem.wait_for(state="visible", timeout=500)
-                        elem.click()
-                        button_found = True
-                        clicked += 1
-                        time.sleep(0.4)
-                        print_success(f"  ✓ Cliqué (fallback): {variant}")
-                        break
-                    except PlaywrightTimeout:
-                        pass
-
-            if not button_found:
-                for variant in variants:
+                    for selector in selectors:
+                        try:
+                            elem = page.locator(selector).filter(has_text=variant).first
+                            elem.wait_for(state="visible", timeout=300)
+                            elem.click()
+                            button_found = True
+                            clicked += 1
+                            time.sleep(0.4)
+                            print_success(f"  ✓ Cliqué (partiel): {variant} [{selector}]")
+                            break
+                        except PlaywrightTimeout:
+                            continue
                     if button_found:
                         break
-                    try:
-                        elem = page.locator("*:visible").filter(has_text=variant).first
-                        elem.wait_for(state="visible", timeout=500)
-                        elem.click()
-                        button_found = True
-                        clicked += 1
-                        time.sleep(0.4)
-                        print_success(f"  ✓ Cliqué (dernier recours): {variant}")
-                        break
-                    except PlaywrightTimeout:
-                        pass
 
             if not button_found:
                 print_error(f"  ✗ Non trouvé: {answer_text}")
