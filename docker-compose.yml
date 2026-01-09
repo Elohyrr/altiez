@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  altiez:
+    build: .
+    image: altiez:latest
+    container_name: altiez-bot
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ALTISSIA_USERNAME=${ALTISSIA_USERNAME}
+      - ALTISSIA_PASSWORD=${ALTISSIA_PASSWORD}
+      - ALTISSIA_URL=${ALTISSIA_URL}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./config:/app/config
+      - ./scan_results:/app/scan_results
+      - ./html_snapshots:/app/html_snapshots
+    devices:
+      - /dev/dri:/dev/dri
+    network_mode: host
+    stdin_open: true
+    tty: true
+    shm_size: 2gb

@@ -30,6 +30,28 @@ Automation bot for Altissia language exercises using Python and Playwright.
 - Python 3.7+
 - pip
 
+### 🐳 Docker Installation (Recommended)
+
+**Why Docker?** Avoid SSL/OpenSSL compatibility issues on Ubuntu/Debian by using a pre-configured environment with Chromium and all dependencies.
+
+**Setup:**
+
+```bash
+# 1. Copy environment file
+cp .env.example .env
+
+# 2. Edit .env with your credentials
+nano .env
+
+# 3. Allow X11 display
+xhost +local:root
+
+# 4. Run with Docker Compose
+docker-compose run --rm altiez
+```
+
+The browser will open on your screen. See [DOCKER.md](DOCKER.md) for detailed documentation, troubleshooting, and advanced configurations (Wayland, VNC, etc.).
+
 ### Installation
 
 **Option 1: Automated script**
@@ -296,6 +318,11 @@ See [CHANGELOG.md](docs/CHANGELOG.md) for a detailed history of changes.
 - Check if Altissia updated their HTML structure
 - Inspect the page to find new selectors
 
+### SSL/TLS errors on Ubuntu
+
+**Cause**: OpenSSL/NSS incompatibility on some Ubuntu/Debian systems  
+**Solution**: Use the Docker installation method (recommended). See [DOCKER.md](DOCKER.md) for complete setup.
+
 ---
 
 ## 📄 License
@@ -324,6 +351,7 @@ The authors assume no liability for misuse of this software.
 
 ## 🔗 Links
 
+- [Docker Setup Guide](DOCKER.md) - Complete Docker documentation
 - [Playwright Documentation](https://playwright.dev/python/)
 - [Python-dotenv](https://github.com/theskumar/python-dotenv)
 - [Conventional Commits](https://www.conventionalcommits.org/)
