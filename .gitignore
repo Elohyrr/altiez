@@ -39,3 +39,11 @@ screenshots/
 *.swo
 *~
 altissia_bot.log
+
+# HTML snapshots (analyse mode)
+html_snapshots/
+
+# Scan results (scan mode)
+scan_results/
+
+config/
